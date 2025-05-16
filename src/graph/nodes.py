@@ -206,17 +206,28 @@ def coordinator_node(
     """Coordinator node that communicate with customers."""
     logger.info("Coordinator talking.")
     messages = apply_prompt_template("coordinator", state)
-    response = (
-        get_llm_by_type(AGENT_LLM_MAP["coordinator"])
-        .bind_tools([handoff_to_planner])
-        .invoke(messages)
-    )
+    try:
+        response = (
+            get_llm_by_type(AGENT_LLM_MAP["coordinator"])
+            .bind_tools([handoff_to_planner])
+            .invoke(messages)
+        )
+    except Exception as e:
+        logger.error(f"Error binding tools to LLM: {e}")
+        # If binding tools fails, try without binding tools
+        logger.info("Falling back to LLM without tools")
+        response = get_llm_by_type(AGENT_LLM_MAP["coordinator"]).invoke(messages)
+        # Since we can't use tool calls, always go to planner
+        return Command(
+            update={"locale": state.get("locale", "en-US")},
+            goto="planner" if not state.get("enable_background_investigation") else "background_investigator",
+        )
     logger.debug(f"Current state messages: {state['messages']}")
 
     goto = "__end__"
     locale = state.get("locale", "en-US")  # Default locale if not specified
 
-    if len(response.tool_calls) > 0:
+    if hasattr(response, 'tool_calls') and len(response.tool_calls) > 0:
         goto = "planner"
         if state.get("enable_background_investigation"):
             # if the search_before_planning is True, add the web search tool to the planner agent
@@ -231,10 +242,30 @@ def coordinator_node(
         except Exception as e:
             logger.error(f"Error processing tool calls: {e}")
     else:
-        logger.warning(
-            "Coordinator response contains no tool calls. Terminating workflow execution."
-        )
-        logger.debug(f"Coordinator response: {response}")
+        # Check if the response content indicates we should proceed to planning
+        # This is a fallback for models that don't support tool calls
+        response_content = response.content.lower() if hasattr(response, 'content') else ""
+
+        # Keywords that indicate we should proceed to planning
+        planning_keywords = [
+            "plan", "planning", "research", "investigate", "analyze",
+            "let me help", "i'll help", "i can help", "i will help",
+            "let's break this down", "let's approach this"
+        ]
+
+        # Check if any planning keywords are in the response
+        should_plan = any(keyword in response_content for keyword in planning_keywords)
+
+        if should_plan:
+            logger.info("No tool calls detected, but response indicates planning is needed. Proceeding to planner.")
+            goto = "planner"
+            if state.get("enable_background_investigation"):
+                goto = "background_investigator"
+        else:
+            logger.warning(
+                "Coordinator response contains no tool calls or planning indicators. Terminating workflow execution."
+            )
+            logger.debug(f"Coordinator response: {response}")
 
     return Command(
         update={"locale": locale},
