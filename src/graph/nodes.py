@@ -129,16 +129,63 @@ def planner_node(
             return Command(goto="reporter")
         else:
             return Command(goto="__end__")
+
+    # Transform the LLM output to match the Plan model if necessary
+    if not curr_plan.get("locale") or not curr_plan.get("has_enough_context") or not curr_plan.get("thought"):
+        logger.warning("LLM response doesn't match Plan schema, attempting to transform")
+        logger.debug(f"Original LLM response structure: {json.dumps(curr_plan, indent=2)}")
+
+        # Create a compatible Plan structure from the LLM's article-like output
+        transformed_plan = {
+            "locale": state.get("locale", "en-US"),
+            "has_enough_context": True,  # Assume the article has enough context
+            "thought": curr_plan.get("description", "Generated comprehensive article on the topic"),
+            "title": curr_plan.get("title", "Research Report"),
+            "steps": []  # No steps needed as we're treating this as a complete report
+        }
+        curr_plan = transformed_plan
+        logger.info(f"Transformed plan: {json.dumps(curr_plan, indent=2)}")
+        logger.info("Successfully transformed LLM output to match Plan schema")
+
     if curr_plan.get("has_enough_context"):
         logger.info("Planner response has enough context.")
-        new_plan = Plan.model_validate(curr_plan)
-        return Command(
-            update={
-                "messages": [AIMessage(content=full_response, name="planner")],
-                "current_plan": new_plan,
-            },
-            goto="reporter",
-        )
+        try:
+            new_plan = Plan.model_validate(curr_plan)
+            logger.info("Plan validation successful")
+            return Command(
+                update={
+                    "messages": [AIMessage(content=full_response, name="planner")],
+                    "current_plan": new_plan,
+                },
+                goto="reporter",
+            )
+        except Exception as e:
+            logger.error(f"Plan validation failed: {e}")
+            logger.error(f"Failed plan structure: {json.dumps(curr_plan, indent=2)}")
+
+            # Last resort: try to fix any remaining issues with the plan
+            try:
+                # Ensure all required fields are present with valid types
+                if not isinstance(curr_plan.get("steps"), list):
+                    curr_plan["steps"] = []
+
+                # Try validation again with the fixed plan
+                new_plan = Plan.model_validate(curr_plan)
+                logger.info("Plan validation successful after fixes")
+                return Command(
+                    update={
+                        "messages": [AIMessage(content=full_response, name="planner")],
+                        "current_plan": new_plan,
+                    },
+                    goto="reporter",
+                )
+            except Exception as e2:
+                logger.error(f"Plan validation failed even after fixes: {e2}")
+                # If we can't fix it, return to the reporter with what we have
+                if plan_iterations > 0:
+                    return Command(goto="reporter")
+                else:
+                    return Command(goto="__end__")
     return Command(
         update={
             "messages": [AIMessage(content=full_response, name="planner")],
@@ -190,14 +237,52 @@ def human_feedback_node(
         else:
             return Command(goto="__end__")
 
-    return Command(
-        update={
-            "current_plan": Plan.model_validate(new_plan),
-            "plan_iterations": plan_iterations,
-            "locale": new_plan["locale"],
-        },
-        goto=goto,
-    )
+    try:
+        # Validate the plan against the Plan model
+        validated_plan = Plan.model_validate(new_plan)
+        logger.info("Plan validation successful in human_feedback_node")
+
+        return Command(
+            update={
+                "current_plan": validated_plan,
+                "plan_iterations": plan_iterations,
+                "locale": new_plan["locale"],
+            },
+            goto=goto,
+        )
+    except Exception as e:
+        logger.error(f"Plan validation failed in human_feedback_node: {e}")
+        logger.error(f"Failed plan structure: {json.dumps(new_plan, indent=2)}")
+
+        # Try to fix any issues with the plan
+        try:
+            # Ensure all required fields are present with valid types
+            if not new_plan.get("locale"):
+                new_plan["locale"] = "en-US"
+            if not isinstance(new_plan.get("steps"), list):
+                new_plan["steps"] = []
+            if not new_plan.get("thought"):
+                new_plan["thought"] = "Generated research plan"
+
+            # Try validation again with the fixed plan
+            validated_plan = Plan.model_validate(new_plan)
+            logger.info("Plan validation successful in human_feedback_node after fixes")
+
+            return Command(
+                update={
+                    "current_plan": validated_plan,
+                    "plan_iterations": plan_iterations,
+                    "locale": new_plan["locale"],
+                },
+                goto=goto,
+            )
+        except Exception as e2:
+            logger.error(f"Plan validation failed in human_feedback_node even after fixes: {e2}")
+            # If we can't fix it, return to the appropriate node based on plan_iterations
+            if plan_iterations > 0:
+                return Command(goto="reporter")
+            else:
+                return Command(goto="__end__")
 
 
 def coordinator_node(

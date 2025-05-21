@@ -1,45 +1,30 @@
-# 🦌 [About DeerFlow](https://github.com/bytedance/deer-flow)
+# About Kitco Research AI
 
-> **From Open Source, Back to Open Source**
+> **Advanced Research and Analysis**
 
-**DeerFlow** (**D**eep **E**xploration and **E**fficient **R**esearch **Flow**) is a community-driven AI automation framework inspired by the remarkable contributions of the open source community. Our mission is to seamlessly integrate language models with specialized tools for tasks such as web search, crawling, and Python code execution—all while giving back to the community that made this innovation possible.
-
----
-
-## 🌟 GitHub Repository
-
-Explore DeerFlow on GitHub: [github.com/bytedance/deer-flow](https://github.com/bytedance/deer-flow)
+**Kitco Research AI** is an advanced AI automation framework designed for deep research and analysis. Our mission is to seamlessly integrate language models with specialized tools for tasks such as web search, crawling, and Python code execution to deliver comprehensive research capabilities.
 
 ---
 
 ## 📜 License
 
-DeerFlow is proudly open source and distributed under the **MIT License**.
+Kitco Research AI is distributed under the **MIT License**.
 
 ---
 
 ## 🙌 Acknowledgments
 
-We extend our heartfelt gratitude to the open source projects and contributors who have made DeerFlow a reality. We truly stand on the shoulders of giants.
+We extend our gratitude to the open source projects and contributors that have made Kitco Research AI possible.
 
 ### Core Frameworks
-- **[LangChain](https://github.com/langchain-ai/langchain)**: A phenomenal framework that powers our LLM interactions and chains.
-- **[LangGraph](https://github.com/langchain-ai/langgraph)**: Enabling sophisticated multi-agent orchestration.
-- **[Next.js](https://nextjs.org/)**: A cutting-edge framework for building web applications.
+- **LangChain**: A powerful framework that powers our LLM interactions and chains.
+- **LangGraph**: Enabling sophisticated multi-agent orchestration.
+- **Next.js**: A cutting-edge framework for building web applications.
 
 ### UI Libraries
-- **[Shadcn](https://ui.shadcn.com/)**: Minimalistic components that power our UI.
-- **[Zustand](https://zustand.docs.pmnd.rs/)**: A stunning state management library.
-- **[Framer Motion](https://www.framer.com/motion/)**: An amazing animation library.
-- **[React Markdown](https://www.npmjs.com/package/react-markdown)**: Exceptional markdown rendering with customizability.
-- **[SToneX](https://github.com/stonexer)**: For his invaluable contribution to token-by-token visual effects.
+- **Shadcn**: Minimalistic components that power our UI.
+- **Zustand**: A robust state management library.
+- **Framer Motion**: An excellent animation library.
+- **React Markdown**: Exceptional markdown rendering with customizability.
 
-These outstanding projects form the backbone of DeerFlow and exemplify the transformative power of open source collaboration.
-
-### Special Thanks
-Finally, we want to express our heartfelt gratitude to the core authors of `DeerFlow`:
-
-- **[Daniel Walnut](https://github.com/hetaoBackend/)**
-- **[Henry Li](https://github.com/magiccube/)**
-
-Without their vision, passion and dedication, `DeerFlow` would not be what it is today.
+These outstanding projects form the backbone of Kitco Research AI and enable its powerful capabilities.

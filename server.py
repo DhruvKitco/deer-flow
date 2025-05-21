@@ -45,6 +45,12 @@ if __name__ == "__main__":
         choices=["debug", "info", "warning", "error", "critical"],
         help="Log level (default: info)",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=10,
+        help="Number of worker processes (default: 10)",
+    )
 
     args = parser.parse_args()
 
@@ -61,5 +67,6 @@ if __name__ == "__main__":
         host=args.host,
         port=args.port,
         reload=reload,
+        workers=args.workers,
         log_level=args.log_level,
     )

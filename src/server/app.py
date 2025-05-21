@@ -33,8 +33,8 @@ from src.tools import VolcengineTTS
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="DeerFlow API",
-    description="API for Deer",
+    title="Kitco Research AI API",
+    description="API for Kitco Research AI",
     version="0.1.0",
 )
 
